@@ -34,6 +34,7 @@ function App() {
             axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/me`, {
                 headers: { Authorization: `Bearer ${tokenToUse}` }
             }).then(res => {
+                console.log("LOGIN SUCCESS PAYLOAD:", res.data);
                 dispatch(loginSuccess({ user: res.data, token: tokenToUse }))
                 if (urlToken) {
                     navigate('/home', { replace: true })
