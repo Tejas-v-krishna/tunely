@@ -44,7 +44,7 @@ export default function AuthPage() {
 
                     {/* Spotify Login Button */}
                     <motion.a
-                        href={termsAccepted ? 'http://localhost:5000/api/auth/spotify' : '#'}
+                        href={termsAccepted ? '$\{import.meta.env.VITE_API_URL || 'http://localhost:5000'\}/api/auth/spotify' : '#'}
                         whileHover={{ scale: termsAccepted ? 1.02 : 1 }}
                         whileTap={{ scale: termsAccepted ? 0.98 : 1 }}
                         onClick={handleSpotifyLogin}
