@@ -48,7 +48,7 @@ router.get('/me', async (req, res) => {
         const token = req.headers.authorization?.split(' ')[1]
         if (!token) return res.status(401).json({ error: 'No token' })
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'tunely-secret')
-        const user = await User.findById(decoded.userId).select('-accessToken -refreshToken')
+        const user = await User.findById(decoded.userId).select('-refreshToken')
         res.json(user)
     } catch (err) {
         res.status(401).json({ error: 'Invalid token' })

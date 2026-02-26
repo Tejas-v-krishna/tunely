@@ -34,7 +34,7 @@ const browseCategories = [
 export default function SearchPage() {
     const dispatch = useDispatch()
     const { searchQuery } = useSelector(state => state.ui)
-    const { token } = useSelector(state => state.auth)
+    const { token, user } = useSelector(state => state.auth)
     const { play, deviceId, error: playerError, isReady } = useSpotify() || {}
     const [activeFilter, setActiveFilter] = useState('all')
     const [searchResults, setSearchResults] = useState(null)
@@ -42,7 +42,7 @@ export default function SearchPage() {
     const [searchError, setSearchError] = useState(null)
 
     useEffect(() => {
-        if (!searchQuery || !token) {
+        if (!searchQuery || !token || !user?.accessToken) {
             setSearchResults(null)
             return
         }
@@ -52,7 +52,7 @@ export default function SearchPage() {
             setSearchError(null)
             try {
                 const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/spotify/search?q=${encodeURIComponent(searchQuery)}&type=track,artist,album&limit=12`, {
-                    headers: { Authorization: `Bearer ${token}` }
+                    headers: { Authorization: `Bearer ${user.accessToken}` }
                 })
                 setSearchResults(res.data)
             } catch (err) {
