@@ -1,0 +1,223 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============== GLOBAL RESET & BASE =============== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #0a0a0f;
+  color: #e2e8f0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =============== SCROLLBAR =============== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0f;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a3a;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8b5cf6;
+}
+
+/* =============== SELECTION =============== */
+::selection {
+  background: rgba(139, 92, 246, 0.4);
+  color: #fff;
+}
+
+/* =============== UTILITY CLASSES =============== */
+.glass {
+  background: rgba(18, 18, 26, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-strong {
+  background: rgba(18, 18, 26, 0.85);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #8b5cf6, #06ffa5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-pink {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow-purple {
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.3), 0 0 60px rgba(139, 92, 246, 0.1);
+}
+
+.glow-accent {
+  box-shadow: 0 0 30px rgba(6, 255, 165, 0.3), 0 0 60px rgba(6, 255, 165, 0.1);
+}
+
+/* =============== WAVE BARS (Landing Hero) =============== */
+.wave-bar {
+  width: 4px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #8b5cf6, #06ffa5);
+  animation: wave 1.2s ease-in-out infinite;
+}
+.wave-bar:nth-child(1) { animation-delay: 0s; height: 20px; }
+.wave-bar:nth-child(2) { animation-delay: 0.1s; height: 35px; }
+.wave-bar:nth-child(3) { animation-delay: 0.2s; height: 25px; }
+.wave-bar:nth-child(4) { animation-delay: 0.3s; height: 40px; }
+.wave-bar:nth-child(5) { animation-delay: 0.4s; height: 30px; }
+.wave-bar:nth-child(6) { animation-delay: 0.5s; height: 45px; }
+.wave-bar:nth-child(7) { animation-delay: 0.3s; height: 20px; }
+.wave-bar:nth-child(8) { animation-delay: 0.2s; height: 35px; }
+
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.5); opacity: 0.7; }
+  50% { transform: scaleY(1.5); opacity: 1; }
+}
+
+/* =============== HOVER TRANSITIONS =============== */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.hover-scale {
+  transition: transform 0.2s ease;
+}
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* =============== SIDEBAR STYLES =============== */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+.sidebar-link:hover {
+  background: rgba(139, 92, 246, 0.1);
+  color: #e2e8f0;
+}
+.sidebar-link.active {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+}
+
+/* =============== MUSIC CARD =============== */
+.music-card {
+  background: #12121a;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+.music-card:hover {
+  background: #1a1a28;
+  border-color: rgba(139, 92, 246, 0.2);
+  transform: translateY(-2px);
+}
+.music-card .play-overlay {
+  position: absolute;
+  bottom: 70px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+}
+.music-card:hover .play-overlay {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* =============== PLAYER BAR =============== */
+.player-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: rgba(6, 6, 10, 0.95);
+  backdrop-filter: blur(30px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  z-index: 50;
+}
+
+/* =============== PROGRESS BAR =============== */
+.progress-track {
+  height: 4px;
+  background: #2a2a3a;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: height 0.15s ease;
+}
+.progress-track:hover {
+  height: 6px;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8b5cf6, #06ffa5);
+  border-radius: 4px;
+  position: relative;
+}
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.progress-track:hover .progress-fill::after {
+  opacity: 1;
+}
