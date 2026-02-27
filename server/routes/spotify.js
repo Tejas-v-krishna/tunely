@@ -7,7 +7,7 @@ const router = express.Router()
 router.get('/search', async (req, res) => {
     try {
         const { q, type = 'track' } = req.query
-        const limit = parseInt(req.query.limit, 10) || 20
+        const limit = Math.min(parseInt(req.query.limit, 10) || 10, 10)
         const token = req.headers.authorization?.split(' ')[1]
         const response = await axios.get(`https://api.spotify.com/v1/search`, {
             params: { q, type, limit },
