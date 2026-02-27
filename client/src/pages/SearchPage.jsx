@@ -35,7 +35,7 @@ export default function SearchPage() {
     const dispatch = useDispatch()
     const { searchQuery } = useSelector(state => state.ui)
     const { token, user } = useSelector(state => state.auth)
-    const { play, deviceId, error: playerError, isReady } = useSpotify() || {}
+    const { play, deviceId, error: playerError, isReady, isLoading } = useSpotify() || {}
     const [activeFilter, setActiveFilter] = useState('all')
     const [searchResults, setSearchResults] = useState(null)
     const [loading, setLoading] = useState(false)
@@ -168,6 +168,13 @@ export default function SearchPage() {
                         <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
                             <p className="font-semibold mb-1">Could not complete action</p>
                             <p>{!token ? "Missing authentication token. Please Login with Spotify." : (playerError || searchError)}</p>
+                        </div>
+                    )}
+
+                    {isLoading && (
+                        <div className="mb-6 p-4 rounded-xl bg-tunely-primary/10 border border-tunely-primary/30 text-tunely-primary text-sm flex items-center gap-3">
+                            <div className="animate-spin w-4 h-4 border-2 border-tunely-primary border-t-transparent rounded-full" />
+                            <p>Preparing audio stream... (first play may take ~10 seconds)</p>
                         </div>
                     )}
 

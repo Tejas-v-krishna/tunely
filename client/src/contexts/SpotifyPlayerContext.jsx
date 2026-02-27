@@ -1,106 +1,133 @@
-import React, { createContext, useContext, useState, useRef, useEffect } from 'react'
+import React, { createContext, useContext, useState, useRef, useCallback } from 'react'
 import { useDispatch } from 'react-redux'
 import axios from 'axios'
-import ReactPlayer from 'react-player'
 import {
     setTrack, setPlaying, setProgress, setDuration
 } from '../redux/slices/playerSlice'
 
 const SpotifyPlayerContext = createContext(null)
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 export function SpotifyPlayerProvider({ children }) {
     const dispatch = useDispatch()
-    const playerRef = useRef(null)
+    const audioRef = useRef(null)
 
-    // Internal player state
-    const [ytUrl, setYtUrl] = useState(null)
-    const [isPlaying, setIsPlaying] = useState(false)
-    const [volume, setVolume] = useState(0.8)
     const [error, setError] = useState(null)
-    const [isReady, setIsReady] = useState(true) // Always ready since we don't need a Spotify handshake
+    const [isReady] = useState(true)
+    const [isLoading, setIsLoading] = useState(false)
 
-    const play = async (spotifyUri, trackMetaOverrides) => {
+    // Ensure we have one shared Audio element
+    const getAudio = useCallback(() => {
+        if (!audioRef.current) {
+            const audio = new Audio()
+
+            audio.addEventListener('playing', () => {
+                dispatch(setPlaying(true))
+            })
+            audio.addEventListener('pause', () => {
+                dispatch(setPlaying(false))
+            })
+            audio.addEventListener('ended', () => {
+                dispatch(setPlaying(false))
+                dispatch(setProgress(0))
+            })
+            audio.addEventListener('timeupdate', () => {
+                dispatch(setProgress(audio.currentTime))
+            })
+            audio.addEventListener('loadedmetadata', () => {
+                dispatch(setDuration(audio.duration))
+            })
+            audio.addEventListener('error', (e) => {
+                console.error('Audio element error:', e)
+                setError('Audio playback failed. The track may be unavailable.')
+                dispatch(setPlaying(false))
+            })
+
+            audioRef.current = audio
+        }
+        return audioRef.current
+    }, [dispatch])
+
+    const play = async (spotifyUri, trackMeta) => {
         try {
             setError(null)
-            // Parse the query cleanly.
-            // When play() is called in the UI, we'll pass the exact track name + artist name 
-            // example trackMetaOverrides = { name: "Blinding Lights", artist: "The Weeknd" }
-            if (!trackMetaOverrides?.name || !trackMetaOverrides?.artist) {
-                throw new Error("Missing track metadata for YouTube search fallback")
+            setIsLoading(true)
+
+            if (!trackMeta?.name || !trackMeta?.artist) {
+                throw new Error('Missing track metadata for search')
             }
 
-            const searchQuery = `${trackMetaOverrides.name} ${trackMetaOverrides.artist} audio`
+            const searchQuery = `${trackMeta.name} ${trackMeta.artist}`
 
-            // 1. Ask our backend to find this song on YTMusic
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/ytmusic/search?q=${encodeURIComponent(searchQuery)}`)
+            // 1. Search YTMusic for the videoId
+            const searchRes = await axios.get(
+                `${API_URL}/api/ytmusic/search?q=${encodeURIComponent(searchQuery)}`,
+                { timeout: 10000 }
+            )
 
-            if (res.data?.url) {
-                setYtUrl(res.data.url)
-                setIsPlaying(true)
-                dispatch(setPlaying(true))
-            } else {
-                throw new Error("Could not locate a playable stream for this track.")
+            if (!searchRes.data?.videoId) {
+                throw new Error('Could not find this track on YouTube Music.')
             }
+
+            // 2. Get the direct audio URL (this can take ~10-15 seconds first time)
+            const audioRes = await axios.get(
+                `${API_URL}/api/ytmusic/audio-url/${searchRes.data.videoId}`,
+                { timeout: 30000 } // 30 second timeout — ytdl-core needs ~10-15s
+            )
+
+            if (!audioRes.data?.audioUrl) {
+                throw new Error('Could not extract audio stream for this track.')
+            }
+
+            // 3. Play it using the native Audio element
+            const audio = getAudio()
+            audio.src = audioRes.data.audioUrl
+            audio.load()
+            await audio.play()
+
+            setIsLoading(false)
         } catch (err) {
-            console.error('YTMusic Playback Error:', err)
+            console.error('Play Error:', err)
             setError(err.response?.data?.error || err.message)
-            setIsPlaying(false)
+            setIsLoading(false)
             dispatch(setPlaying(false))
         }
     }
 
     const togglePlayPause = () => {
-        if (!ytUrl) return
-        const newIsPlaying = !isPlaying
-        setIsPlaying(newIsPlaying)
-        dispatch(setPlaying(newIsPlaying))
+        const audio = audioRef.current
+        if (!audio) return
+        if (audio.paused) {
+            audio.play()
+        } else {
+            audio.pause()
+        }
     }
 
-    const nextTrack = () => { /* Not implemented for single clicks yet */ }
-    const previousTrack = () => { /* Not implemented for single clicks yet */ }
+    const nextTrack = () => { }
+    const previousTrack = () => { }
 
     const seek = (seconds) => {
-        if (playerRef.current) {
-            playerRef.current.seekTo(seconds, 'seconds')
+        const audio = audioRef.current
+        if (audio) {
+            audio.currentTime = seconds
             dispatch(setProgress(seconds))
         }
     }
 
     const updateVolume = (vol) => {
-        setVolume(vol / 100)
+        const audio = audioRef.current
+        if (audio) {
+            audio.volume = vol / 100
+        }
     }
-
-    // ReactPlayer event handlers
-    const handleProgress = (state) => {
-        dispatch(setProgress(state.playedSeconds))
-    }
-
-    const handleDuration = (duration) => {
-        dispatch(setDuration(duration))
-    }
-
-    const handleEnded = () => {
-        setIsPlaying(false)
-        dispatch(setPlaying(false))
-        dispatch(setProgress(0))
-    }
-
-    const handleBuffer = () => {
-        // UI could show a spinner here
-    }
-
-    const handleError = (e) => {
-        console.error('ReactPlayer Error', e)
-        setError("Playback stream crashed or is geographically unavailable.")
-        setIsPlaying(false)
-        dispatch(setPlaying(false))
-    }
-
 
     const playerUtils = {
-        player: playerRef.current,
-        deviceId: "youtube-engine",
+        player: audioRef.current,
+        deviceId: 'tunely-audio-engine',
         isReady,
+        isLoading,
         error,
         play,
         togglePlayPause,
@@ -113,27 +140,6 @@ export function SpotifyPlayerProvider({ children }) {
     return (
         <SpotifyPlayerContext.Provider value={playerUtils}>
             {children}
-            {/* Hidden Audio Engine */}
-            {ytUrl && (
-                <div style={{ display: 'none' }}>
-                    <ReactPlayer
-                        ref={playerRef}
-                        url={ytUrl}
-                        playing={isPlaying}
-                        volume={volume}
-                        onProgress={handleProgress}
-                        onDuration={handleDuration}
-                        onEnded={handleEnded}
-                        onBuffer={handleBuffer}
-                        onError={handleError}
-                        config={{
-                            youtube: {
-                                playerVars: { showinfo: 0, autoplay: 1 }
-                            }
-                        }}
-                    />
-                </div>
-            )}
         </SpotifyPlayerContext.Provider>
     )
 }
