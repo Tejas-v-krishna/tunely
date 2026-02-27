@@ -44,10 +44,15 @@ export default function useSpotifyPlayer() {
                 setIsReady(false)
             })
 
-            player.addListener('initialization_error', ({ message }) => { console.error(message); setError(message) })
-            player.addListener('authentication_error', ({ message }) => { console.error(message); setError(message) })
-            player.addListener('account_error', ({ message }) => { console.error(message); setError(message) })
-            player.addListener('playback_error', ({ message }) => { console.error(message); setError(message) })
+            const logError = (type, message) => {
+                console.error(type, message)
+                setError(`SDK ${type}: ${message}`)
+            }
+
+            player.addListener('initialization_error', ({ message }) => logError('Init Error', message))
+            player.addListener('authentication_error', ({ message }) => logError('Auth Error', message))
+            player.addListener('account_error', ({ message }) => logError('Account Error', message))
+            player.addListener('playback_error', ({ message }) => logError('Playback Error', message))
 
             player.addListener('player_state_changed', state => {
                 if (!state) return
@@ -84,16 +89,34 @@ export default function useSpotifyPlayer() {
         }
     }, [token, dispatch])
 
-    const play = (spotifyUri) => {
+    const play = async (spotifyUri) => {
         if (!deviceId || !token) return
-        fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ uris: [spotifyUri] }),
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+        try {
+            const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+                method: 'PUT',
+                body: JSON.stringify({ uris: [spotifyUri] }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            if (!res.ok) {
+                let errorMsg = 'Playback failed. A Premium account is required for the Web Playback SDK.'
+                try {
+                    const data = await res.json()
+                    console.error('Play API Error:', data)
+                    if (data?.error?.message) errorMsg = data.error.message
+                } catch (e) {
+                    console.error('Failed to parse error response')
+                }
+                setError(errorMsg)
+            } else {
+                setError(null) // clear previous errors if successful
             }
-        })
+        } catch (err) {
+            console.error('Play Fetch Error:', err)
+            setError(err.message)
+        }
     }
 
     const togglePlayPause = () => playerRef.current?.togglePlay()

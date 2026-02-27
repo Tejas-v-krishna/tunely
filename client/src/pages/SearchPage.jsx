@@ -68,7 +68,9 @@ export default function SearchPage() {
 
     const handlePlayTrack = (track) => {
         if (!isReady || !deviceId) {
-            setSearchError("Spotify Player is not ready. You may need a Spotify Premium account, or try refreshing the page.")
+            if (!playerError) {
+                setSearchError("Spotify Player is not ready. You may need a Spotify Premium account, or try refreshing the page.")
+            }
             return
         }
         if (play && track.uri) {
@@ -165,11 +167,11 @@ export default function SearchPage() {
                     {(searchError || playerError || !token) && (
                         <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
                             <p className="font-semibold mb-1">Could not complete action</p>
-                            <p>{!token ? "Missing authentication token. Please Login with Spotify." : (searchError || playerError)}</p>
+                            <p>{!token ? "Missing authentication token. Please Login with Spotify." : (playerError || searchError)}</p>
                         </div>
                     )}
 
-                    {!isReady && token && !searchError && (
+                    {!isReady && token && !searchError && !playerError && (
                         <div className="mb-6 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm">
                             <p>Spotify Web Player is connecting... (Premium account required for playback)</p>
                         </div>
