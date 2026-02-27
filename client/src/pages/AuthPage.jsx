@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Music, Check, Loader2 } from 'lucide-react'
 
@@ -7,6 +7,10 @@ export default function AuthPage() {
     const navigate = useNavigate()
     const [termsAccepted, setTermsAccepted] = useState(false)
     const [loading, setLoading] = useState(false)
+    const location = useLocation()
+    const queryParams = new URLSearchParams(location.search)
+    const errorParam = queryParams.get('error')
+    const messageParam = queryParams.get('message')
 
     const handleSpotifyLogin = (e) => {
         if (!termsAccepted) {
@@ -41,6 +45,15 @@ export default function AuthPage() {
 
                     <h1 className="text-3xl font-bold text-white font-display mb-2">Welcome to Tunely</h1>
                     <p className="text-tunely-text-dim mb-10">Sign in with your Spotify account to continue</p>
+
+                    {errorParam && (
+                        <div className="mb-8 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm text-center">
+                            <p className="font-bold mb-1">
+                                {errorParam === 'db_error' ? 'Database Connection Error' : 'Authentication Failed'}
+                            </p>
+                            <p>{messageParam || 'There was a problem connecting to the server. Please check your deployment settings.'}</p>
+                        </div>
+                    )}
 
                     {/* Spotify Login Button */}
                     <motion.a

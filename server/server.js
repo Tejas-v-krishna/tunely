@@ -14,12 +14,27 @@ dotenv.config({ path: '../.env' })
 
 const app = express()
 const httpServer = createServer(app)
-const io = new Server(httpServer, {
-    cors: { origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }
-})
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    'http://localhost:5173',
+    'http://localhost:5174'
+].filter(Boolean)
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+            callback(null, true)
+        } else {
+            callback(new Error('Not allowed by CORS for origin ' + origin))
+        }
+    },
+    credentials: true
+}
+
+const io = new Server(httpServer, { cors: corsOptions })
 
 // ═══ MIDDLEWARE ═══
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }))
+app.use(cors(corsOptions))
 app.use(express.json())
 
 // ═══ ROUTES ═══
@@ -65,9 +80,11 @@ io.on('connection', (socket) => {
 
 // ═══ MONGODB CONNECTION ═══
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/tunely'
-mongoose.connect(MONGO_URI)
+mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 })
     .then(() => console.log('✅ MongoDB connected'))
-    .catch(err => console.error('❌ MongoDB error:', err))
+    .catch(err => {
+        console.error('❌ MongoDB connection error on startup:', err.message);
+    })
 
 // ═══ START SERVER ═══
 const PORT = process.env.PORT || 5000

@@ -38,7 +38,10 @@ router.get('/callback', async (req, res) => {
         res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/home?token=${token}`)
     } catch (err) {
         console.error('Auth error:', err.message)
-        res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth?error=auth_failed`)
+        const isDbError = err.name?.includes('Mongo') || err.message?.includes('Mongo')
+        const errorType = isDbError ? 'db_error' : 'auth_failed'
+        const errMsg = isDbError ? 'Database connection failed. Please check your MongoDB Atlas Network Access.' : err.message
+        res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth?error=${errorType}&message=${encodeURIComponent(errMsg)}`)
     }
 })
 
