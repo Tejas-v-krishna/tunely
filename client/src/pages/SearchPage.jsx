@@ -67,14 +67,14 @@ export default function SearchPage() {
     }, [searchQuery, token])
 
     const handlePlayTrack = (track) => {
-        if (!isReady || !deviceId) {
+        if (!isReady) {
             if (!playerError) {
-                setSearchError("Spotify Player is not ready. You may need a Spotify Premium account, or try refreshing the page.")
+                setSearchError("Player is initializing...")
             }
             return
         }
-        if (play && track.uri) {
-            play(track.uri)
+        if (play && track) {
+            play(track.uri, { name: track.name, artist: track.artists[0]?.name })
             dispatch(setTrack({
                 id: track.id,
                 title: track.name,
@@ -173,7 +173,7 @@ export default function SearchPage() {
 
                     {!isReady && token && !searchError && !playerError && (
                         <div className="mb-6 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm">
-                            <p>Spotify Web Player is connecting... (Premium account required for playback)</p>
+                            <p>Audio Engine is connecting...</p>
                         </div>
                     )}
 

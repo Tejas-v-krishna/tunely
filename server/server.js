@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.js'
 import playlistRoutes from './routes/playlists.js'
 import roomRoutes from './routes/rooms.js'
 import spotifyRoutes from './routes/spotify.js'
+import ytmusicRoutes from './routes/ytmusic.js'
 
 dotenv.config({ path: '../.env' })
 
@@ -46,6 +47,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/playlists', playlistRoutes)
 app.use('/api/rooms', roomRoutes)
 app.use('/api/spotify', spotifyRoutes)
+app.use('/api/ytmusic', ytmusicRoutes)
 
 // ═══ SOCKET.IO (Live Rooms) ═══
 io.on('connection', (socket) => {
